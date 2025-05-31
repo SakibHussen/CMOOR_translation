@@ -1,0 +1,15 @@
+Package: CentralDogmaExplorer
+Type: Package
+Title: Central Dogma Explorer Shiny App
+Version: 1.0.0
+Author: Your Name
+Maintainer: Your Name <your.email@example.com>
+Description: A Shiny app to explore DNA transcription and translation with validation and interactive UI.
+Depends: R (>= 3.5.0)
+Imports:
+    shiny,
+    shinyjs,
+    rsconnect
+License: MIT
+Encoding: UTF-8
+LazyData: true
