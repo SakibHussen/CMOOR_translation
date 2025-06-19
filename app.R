@@ -1,4 +1,3 @@
-
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 install.packages("shiny")
 library(shiny)
@@ -114,27 +113,25 @@ amino_acid_properties <- list(
 # Function to format amino acid sequence with colors based on properties
 format_amino_acids_with_color <- function(amino_acid_string) {
   if (is.null(amino_acid_string) || nchar(amino_acid_string) == 0) {
-    return("")
+    return(NULL) # Return NULL for empty, so it doesn't render empty spans
   }
   
   amino_acid_string <- toupper(gsub(" ", "", amino_acid_string))
-  # Split into 3-letter chunks
   amino_acids <- strsplit(amino_acid_string, "(?<=\\G...)", perl = TRUE)[[1]]
   
-  # Generate HTML for each amino acid with its corresponding color
   formatted_html_elements <- lapply(amino_acids, function(aa_code) {
     props <- amino_acid_properties[[aa_code]]
     if (is.null(props)) {
-      # Fallback for unrecognized amino acids or if properties are not defined
-      return(tags$span(style = "color: #333333;", aa_code)) # Default to dark gray
+      return(tags$span(class = "colored-amino-acid", style = "color: #333333; font-weight: bold;", aa_code)) # Add bold
     } else {
-      return(tags$span(style = paste0("color: ", props$color, "; font-weight: bold; margin-right: 8px;"), aa_code))
+      return(tags$span(class = "colored-amino-acid", style = paste0("color: ", props$color, "; font-weight: bold;"), aa_code)) # Add bold
     }
   })
   
-  # Combine the individual span elements with a non-breaking space
-  # This ensures spaces are rendered correctly between colored chunks
-  do.call(tagList, lapply(formatted_html_elements, function(x) list(x, tags$span("&nbsp;&nbsp;"))))
+  # Simply combine the individual span elements. CSS will handle spacing.
+  # Use HTML() to ensure the list of tags is rendered as HTML, rather than R's default list printing.
+  # You might need to flatten the list if it's deeply nested, but `tagList` usually handles this.
+  tagList(formatted_html_elements)
 }
 
 # Function to transcribe DNA to RNA
@@ -220,31 +217,6 @@ format_sequence <- function(seq_string, chunk_size = 3) {
   }
   paste(substring(seq_string, seq(1, nchar(seq_string), chunk_size), seq(chunk_size, nchar(seq_string), chunk_size)), collapse = " ")
 }
-
-# Function to format amino acid sequence with colors based on properties
-format_amino_acids_with_color <- function(amino_acid_string) {
-  if (is.null(amino_acid_string) || nchar(amino_acid_string) == 0) {
-    return(NULL) # Return NULL for empty, so it doesn't render empty spans
-  }
-  
-  amino_acid_string <- toupper(gsub(" ", "", amino_acid_string))
-  amino_acids <- strsplit(amino_acid_string, "(?<=\\G...)", perl = TRUE)[[1]]
-  
-  formatted_html_elements <- lapply(amino_acids, function(aa_code) {
-    props <- amino_acid_properties[[aa_code]]
-    if (is.null(props)) {
-      return(tags$span(class = "colored-amino-acid", style = "color: #333333;", aa_code)) # Add a class
-    } else {
-      return(tags$span(class = "colored-amino-acid", style = paste0("color: ", props$color, ";"), aa_code)) # Add a class
-    }
-  })
-  
-  # Simply combine the individual span elements. CSS will handle spacing.
-  # Use HTML() to ensure the list of tags is rendered as HTML, rather than R's default list printing.
-  # You might need to flatten the list if it's deeply nested, but `tagList` usually handles this.
-  tagList(formatted_html_elements)
-}
-
 
 # Function to generate random DNA sequence
 generate_dna <- function(length = 15) {
@@ -404,7 +376,7 @@ ui <- fluidPage(
     }
   ")),
   div(class = "intro-text",
-      "Welcome, students! 🎓 Observe the generated DNA and RNA sequences. Your task is to enter the correct amino acid sequence by translating the RNA. Let’s explore the Central Dogma! 🧬"
+      "Welcome, students! 🎓 Observe the generated DNA and RNA sequences. Your task is to enter the correct amino acid sequence by translating the RNA. Let's explore the Central Dogma! 🧬"
   ),
   div(class = "container-fluid", # Use container-fluid for better responsiveness
       fluidRow(
@@ -416,7 +388,10 @@ ui <- fluidPage(
                div(style = "text-align: center;", # Center buttons
                    actionButton("process_sequences", "Check Translation", class = "btn-action btn-process"),
                    actionButton("refresh", "Refresh All", class = "btn-action btn-refresh")
-               )
+               ),
+               # New UI output for formatted user DNA sequence
+               div(class = "sequence-label", "Formatted User DNA Sequence (Triplets)"),
+               div(class = "sequence-text", textOutput("formatted_user_dna"))
         )
       ),
       fluidRow(
@@ -500,7 +475,7 @@ server <- function(input, output, session) {
         
         tagList(
           div(class = "sequence-label", "DNA 🧬"),
-          div(class = "sequence-text", format_sequence(current_dna, 1)),
+          div(class = "sequence-text", format_sequence(current_dna, 3)),
           div(class = "sequence-label", "RNA 📜"),
           div(class = "sequence-text", format_sequence(current_rna)),
           div(class = "sequence-label", "Your Amino Acids 🧪"),
@@ -516,7 +491,7 @@ server <- function(input, output, session) {
       output$sequence_results <- renderUI({
         tagList(
           div(class = "sequence-label", "DNA 🧬"),
-          div(class = "sequence-text", format_sequence(current_dna, 1)),
+          div(class = "sequence-text", format_sequence(current_dna, 3)),
           div(class = "sequence-label", "RNA 📜"),
           div(class = "sequence-text", format_sequence(current_rna)),
           div(class = "sequence-label", "Your Amino Acids 🧪"),
