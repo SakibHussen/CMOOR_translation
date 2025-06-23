@@ -215,13 +215,52 @@ format_sequence <- function(seq_string, chunk_size = 3) {
   if (nchar(seq_string) == 0) {
     return("")
   }
-  paste(substring(seq_string, seq(1, nchar(seq_string), chunk_size), seq(chunk_size, nchar(seq_string), chunk_size)), collapse = " ")
+  # Add spaces between chunks but limit the total length
+  formatted <- paste(substring(seq_string, seq(1, nchar(seq_string), chunk_size), seq(chunk_size, nchar(seq_string), chunk_size)), collapse = " ")
+  # If the formatted string is too long, truncate it
+  if (nchar(formatted) > 100) {
+    formatted <- substr(formatted, 1, 100)
+    formatted <- paste0(formatted, "...")
+  }
+  return(formatted)
 }
 
 # Function to generate random DNA sequence
 generate_dna <- function(length = 15) {
-  bases <- c("A", "T", "C", "G")
-  paste(sample(bases, length, replace = TRUE), collapse = "")
+  # Always use 15 nucleotides for consistency
+  length <- 15
+  
+  # Function to check if a DNA sequence would create stop codons when transcribed
+  has_stop_codons <- function(dna_seq) {
+    # Check for stop codons: UAA, UAG, UGA
+    # These correspond to DNA sequences: TAA, TAG, TGA
+    stop_patterns <- c("TAA", "TAG", "TGA")
+    
+    for (pattern in stop_patterns) {
+      if (grepl(pattern, dna_seq)) {
+        return(TRUE)
+      }
+    }
+    return(FALSE)
+  }
+  
+  # Generate DNA sequence and check for stop codons
+  max_attempts <- 500  # Increased attempts for better safety
+  for (attempt in 1:max_attempts) {
+    # Use only safe bases to avoid stop codons
+    safe_bases <- c("A", "C", "G")  # Avoid T completely to prevent stop codons
+    dna_seq <- paste(sample(safe_bases, length, replace = TRUE), collapse = "")
+    
+    # Double-check by transcribing and verifying no stop codons in RNA
+    rna_seq <- chartr("ATCG", "UAGC", dna_seq)
+    if (!grepl("UAA|UAG|UGA", rna_seq)) {
+      return(dna_seq)
+    }
+  }
+  
+  # If we still can't find a safe sequence, generate a completely safe one
+  safe_bases <- c("A", "C", "G")
+  return(paste(sample(safe_bases, length, replace = TRUE), collapse = ""))
 }
 
 # UI Definition
@@ -231,8 +270,11 @@ ui <- fluidPage(
   tags$style(HTML("
     body {
       background-color: #f0f4f8;
-      font-family: 'Inter', sans-serif; /* Changed to Inter */
+      font-family: 'Inter', sans-serif;
       color: #333;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
     }
     .title-panel {
       text-align: center;
@@ -249,26 +291,44 @@ ui <- fluidPage(
       padding: 15px;
       border-radius: 8px;
     }
-    .shiny-input-container {
+    .input-section {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       margin-bottom: 20px;
-    }
-    input[type='text'] {
-      font-family: 'Courier New', monospace !important;
-      font-size: 24px !important;
-      /* letter-spacing: 3px !important; */ /* Removed to prevent interference with colored spans */
-      padding: 10px !important;
-      border-radius: 8px !important; /* Rounded corners */
-      border: 2px solid #ccc !important;
-      width: 100% !important; /* Made responsive */
-      max-width: 600px; /* Max width for larger screens */
-      height: 50px !important;
+      width: 100%;
       box-sizing: border-box;
-      overflow-x: auto !important;
-      white-space: nowrap !important;
     }
-    /* Color-code nucleotides */
-    input[type='text']::placeholder {
-      color: #999;
+    .input-field {
+      margin-bottom: 15px;
+    }
+    .input-field label {
+      font-weight: bold;
+      font-size: 18px;
+      color: #2c3e50;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .input-field input {
+      font-family: 'Courier New', monospace !important;
+      font-size: 22px !important;
+      padding: 12px !important;
+      border-radius: 8px !important;
+      border: 2px solid #ccc !important;
+      width: 100% !important;
+      height: 60px !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+      white-space: normal !important;
+      word-wrap: break-word !important;
+      word-break: break-all !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+    .input-field input:focus {
+      border-color: #007bff !important;
+      outline: none !important;
     }
     .valid {
       border-color: #28a745 !important;
@@ -276,21 +336,22 @@ ui <- fluidPage(
     .invalid {
       border-color: #dc3545 !important;
     }
-    .btn-action {
-      font-size: 16px;
-      padding: 10px 20px;
-      border-radius: 5px;
-      margin-right: 10px;
-      transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out; /* Smooth transitions */
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    .button-section {
+      text-align: center;
+      margin: 20px 0;
     }
-    .btn-action:active {
-        transform: translateY(1px); /* Slight press effect */
+    .btn-action {
+      font-size: 18px;
+      padding: 12px 24px;
+      border-radius: 5px;
+      margin: 0 10px 10px 0;
+      transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      border: none;
     }
     .btn-process {
       background-color: #007bff;
       color: white;
-      border: none;
     }
     .btn-process:hover {
       background-color: #0056b3;
@@ -298,111 +359,130 @@ ui <- fluidPage(
     .btn-refresh {
       background-color: #28a745;
       color: white;
-      border: none;
     }
     .btn-refresh:hover {
       background-color: #218838;
     }
+    .results-section {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      box-sizing: border-box;
+    }
     .sequence-label {
       font-weight: bold;
-      font-size: 18px;
+      font-size: 20px;
       color: #2c3e50;
       margin-top: 15px;
+      margin-bottom: 8px;
     }
     .sequence-text {
       font-family: 'Courier New', monospace;
       font-size: 20px;
-      etter-spacing: normal; /* Ensure default letter spacing for the container */
-      white-space: normal; /* Allow wrapping if sequence is too long for one line */
-      word-break: break-all; 
-      background-color: #fff;
-      padding: 10px;
+      line-height: 1.3;
+      background-color: #f8f9fa;
+      padding: 15px;
       border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      word-wrap: break-word; 
-      overflow-x: auto;
-      
-      max-width: 100%;
-      min-height: 40px; /* Ensure a minimum height even if empty */
+      border: 1px solid #ddd;
+      min-height: 60px;
+      word-wrap: break-word;
+      word-break: break-all;
+      white-space: normal;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
-      .sequence-text span.colored-amino-acid {
-      margin-right: 15px; /* Adjust this value for more or less space between codes */
-      font-family: 'Courier New', monospace; /* Ensure the font is applied to the span */
-      letter-spacing: normal; /* Reset letter-spacing if it was inherited differently */
-      display: inline-block; /* Allows margin-right to work correctly */
-      min-width: 45px; /* Ensure consistent width for each 3-letter code */
-      text-align: left;
+    .sequence-text span.colored-amino-acid {
+      margin-right: 10px;
+      margin-bottom: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 20px;
+      font-weight: bold;
+      display: inline-block;
+      min-width: 50px;
+      text-align: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: #ffffff;
     }
     .error-message {
       color: #dc3545;
-      font-size: 16px;
+      font-size: 18px;
       margin-top: 10px;
       font-weight: bold;
     }
     .success-message {
       color: #28a745;
-      font-size: 16px;
+      font-size: 18px;
       margin-top: 10px;
       font-weight: bold;
     }
-    .sidebar-panel {
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px; /* Add some spacing */
+    @media (max-width: 1200px) {
+      .input-field input {
+        font-size: 20px !important;
+      }
+      .sequence-text {
+        font-size: 18px;
+      }
+      .sequence-text span.colored-amino-acid {
+        font-size: 18px;
+      }
     }
-    .main-panel {
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    /* Responsive adjustments */
     @media (max-width: 768px) {
-      input[type='text'] {
-        width: 100% !important;
-        max-width: none;
+      .input-field input {
         font-size: 18px !important;
+        height: 55px !important;
       }
       .sequence-text {
         font-size: 16px;
+        padding: 12px;
+      }
+      .sequence-text span.colored-amino-acid {
+        font-size: 16px;
+        margin-right: 8px;
+        min-width: 45px;
       }
       .btn-action {
         width: 100%;
-        margin-right: 0;
-        margin-bottom: 10px;
+        margin: 0 0 10px 0;
       }
     }
   ")),
   div(class = "intro-text",
       "Welcome, students! 🎓 Observe the generated DNA and RNA sequences. Your task is to enter the correct amino acid sequence by translating the RNA. Let's explore the Central Dogma! 🧬"
   ),
-  div(class = "container-fluid", # Use container-fluid for better responsiveness
-      fluidRow(
-        column(12, class = "sidebar-panel",
-               textInput("dna_display", "DNA Template Sequence:", value = "TACACCGAAGGCTAA"),
-               textInput("rna_display", "RNA Sequence:", value = "AUGUGGCUUCCGAUU"),
-               textInput("amino_acid_input", "Enter Amino Acid Sequence (3-letter codes, no spaces):", value = "",
-                         placeholder = "e.g., METTRPLEUPROASPSTOP"),
-               div(style = "text-align: center;", # Center buttons
-                   actionButton("process_sequences", "Check Translation", class = "btn-action btn-process"),
-                   actionButton("refresh", "Refresh All", class = "btn-action btn-refresh")
-               ),
-               # New UI output for formatted user DNA sequence
-               div(class = "sequence-label", "Formatted User DNA Sequence (Triplets)"),
-               div(class = "sequence-text", textOutput("formatted_user_dna"))
-        )
+  div(class = "input-section",
+      # Codon Chart moved to the top
+      h4("Codon Chart", style = "text-align: center; color: #2c3e50; margin-bottom: 15px;"),
+      img(src = "codon_chart.png", style="width: 100%; max-width: 700px; display: block; margin: auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"),
+      p("Codon chart designed by Dr. Sayumi York & Dr. John Finnerty.", style = "text-align: center; color: #666; font-size: 14px; margin-top: 15px;"),
+      p("App coded by Sakib Hussen.", style = "text-align: center; color: #666; font-size: 14px; margin-top: 5px;"),
+      hr(style="margin-top: 25px; margin-bottom: 25px; border-color: #eee;"),
+      
+      div(class = "input-field",
+          tags$label("DNA Template Sequence:"),
+          textInput("dna_display", NULL, value = "TACACCGAAGGCTAA")
       ),
-      fluidRow(
-        column(12, class = "main-panel",
-               style = "margin-top: 20px;",
-               h4("Results", style = "color: #2c3e50; text-align: center;"),
-               uiOutput("sequence_results"),
-               div(class = "error-message", htmlOutput("error_message")),
-               div(class = "success-message", htmlOutput("success_message"))
-        )
+      div(class = "input-field",
+          tags$label("RNA Sequence:"),
+          textInput("rna_display", NULL, value = "AUGUGGCUUCCGAUU")
+      ),
+      div(class = "input-field",
+          tags$label("Enter Amino Acid Sequence (3-letter codes, no spaces):"),
+          textInput("amino_acid_input", NULL, value = "", placeholder = "e.g., METTRPLEUPROASPSTOP")
+      ),
+      div(class = "button-section",
+          actionButton("process_sequences", "Check Translation", class = "btn-action btn-process"),
+          actionButton("refresh", "Refresh All", class = "btn-action btn-refresh")
       )
+  ),
+  div(class = "results-section",
+      h4("Results", style = "color: #2c3e50; text-align: center;"),
+      uiOutput("sequence_results"),
+      div(class = "error-message", htmlOutput("error_message")),
+      div(class = "success-message", htmlOutput("success_message"))
   )
 )
 
@@ -503,12 +583,29 @@ server <- function(input, output, session) {
   
   # Handle refresh
   observeEvent(input$refresh, {
-    # Generate a new DNA sequence (length 15-21, multiple of 3)
-    new_dna_length <- sample(seq(15, 21, by = 3), 1)
-    new_dna <- generate_dna(length = new_dna_length)
+    # Always generate a 15-nucleotide DNA sequence for consistency
+    new_dna <- generate_dna(length = 15)
     
     # Transcribe the new DNA to get the corresponding RNA
     new_rna <- transcribe_dna(new_dna)
+    
+    # Double-check that no stop codons are present in the RNA
+    if (grepl("UAA|UAG|UGA", new_rna)) {
+      # If stop codons found, regenerate the sequence
+      for (attempt in 1:10) {
+        new_dna <- generate_dna(length = 15)
+        new_rna <- transcribe_dna(new_dna)
+        if (!grepl("UAA|UAG|UGA", new_rna)) {
+          break
+        }
+      }
+      # If still has stop codons, use a completely safe sequence
+      if (grepl("UAA|UAG|UGA", new_rna)) {
+        safe_bases <- c("A", "C", "G")
+        new_dna <- paste(sample(safe_bases, 15, replace = TRUE), collapse = "")
+        new_rna <- transcribe_dna(new_dna)
+      }
+    }
     
     # Update reactive values
     initial_dna(new_dna)
