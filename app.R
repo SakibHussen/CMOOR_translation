@@ -39,38 +39,38 @@ valid_amino_acid_codes <- c(valid_amino_acid_codes, "STOP")
 # Define amino acid categories and their colors based on the provided image
 amino_acid_properties <- list(
   # Aliphatic (Red)
-  "ALA" = list(category = "Aliphatic", color = "#FF0000"), # Alanine
-  "GLY" = list(category = "Aliphatic", color = "#FF0000"), # Glycine
-  "ILE" = list(category = "Aliphatic", color = "#FF0000"), # Isoleucine
-  "LEU" = list(category = "Aliphatic", color = "#FF0000"), # Leucine
-  "PRO" = list(category = "Aliphatic", color = "#FF0000"), # Proline
-  "VAL" = list(category = "Aliphatic", color = "#FF0000"), # Valine
+  "ALA" = list(category = "Aliphatic", color = "#FF0000"), # Alanine - Red
+  "GLY" = list(category = "Aliphatic", color = "#FF0000"), # Glycine - Red
+  "ILE" = list(category = "Aliphatic", color = "#FF0000"), # Isoleucine - Red
+  "LEU" = list(category = "Aliphatic", color = "#FF0000"), # Leucine - Red
+  "PRO" = list(category = "Aliphatic", color = "#FF0000"), # Proline - Red
+  "VAL" = list(category = "Aliphatic", color = "#FF0000"), # Valine - Red
   
-  # Aromatic (Green) - Adjusted for better visibility
-  "PHE" = list(category = "Aromatic", color = "#228B22"), # Phenylalanine (Forest Green)
-  "TRP" = list(category = "Aromatic", color = "#228B22"), # Tryptophan
-  "TYR" = list(category = "Aromatic", color = "#228B22"), # Tyrosine
+  # Aromatic (Green)
+  "PHE" = list(category = "Aromatic", color = "#99CC66"), # Phenylalanine - Light Green
+  "TRP" = list(category = "Aromatic", color = "#99CC66"), # Tryptophan - Light Green
+  "TYR" = list(category = "Aromatic", color = "#99CC66"), # Tyrosine - Light Green
   
-  # Acidic (Blue)
-  "ASP" = list(category = "Acidic", color = "#0000FF"), # Aspartic Acid
-  "GLU" = list(category = "Acidic", color = "#0000FF"), # Glutamic Acid
+  # Acidic (Deep Orange)
+  "ASP" = list(category = "Acidic", color = "#FF6F00"), # Aspartic Acid - Deep Orange
+  "GLU" = list(category = "Acidic", color = "#FF6F00"), # Glutamic Acid - Deep Orange
   
-  # Basic (Light Blue/Cyan) - Adjusted for better visibility
-  "ARG" = list(category = "Basic", color = "#4682B4"), # Arginine (Steel Blue)
-  "HIS" = list(category = "Basic", color = "#4682B4"), # Histidine
-  "LYS" = list(category = "Basic", color = "#4682B4"), # Lysine
+  # Basic (Punchy Cyan Blue)
+  "ARG" = list(category = "Basic", color = "#00B7EB"), # Arginine - Punchy Cyan Blue
+  "HIS" = list(category = "Basic", color = "#00B7EB"), # Histidine - Punchy Cyan Blue
+  "LYS" = list(category = "Basic", color = "#00B7EB"), # Lysine - Punchy Cyan Blue
   
   # Hydroxylic (Pink)
-  "SER" = list(category = "Hydroxylic", color = "#FF69B4"), # Serine (Hot Pink)
-  "THR" = list(category = "Hydroxylic", color = "#FF69B4"), # Threonine
+  "SER" = list(category = "Hydroxylic", color = "#FFB6D5"), # Serine - Pink
+  "THR" = list(category = "Hydroxylic", color = "#FFB6D5"), # Threonine - Pink
   
-  # Sulfur-containing (Orange)
-  "CYS" = list(category = "Sulfur-containing", color = "#FFA500"), # Cysteine
-  "MET" = list(category = "Sulfur-containing", color = "#FFA500"), # Methionine
+  # Sulfur-containing (Vivid Yellow/Gold)
+  "CYS" = list(category = "Sulfur-containing", color = "#FFD700"), # Cysteine - Vivid Yellow/Gold
+  "MET" = list(category = "Sulfur-containing", color = "#FFD700"), # Methionine - Vivid Yellow/Gold
   
-  # Amidic (Purple)
-  "ASN" = list(category = "Amidic", color = "#800080"), # Asparagine
-  "GLN" = list(category = "Amidic", color = "#800080"), # Glutamine
+  # Amidic (Dark Blue)
+  "ASN" = list(category = "Amidic", color = "#003f88"), # Asparagine - Dark Blue
+  "GLN" = list(category = "Amidic", color = "#003f88"), # Glutamine - Dark Blue
   
   # Special case for STOP codon
   "STOP" = list(category = "Stop Codon", color = "#696969") # Dim Gray for stop
@@ -85,29 +85,49 @@ validate_dna <- function(dna) {
   return(dna)
 }
 
-# Color mapping for amino acids (3-letter codes) based on properties
+# Color mapping for amino acids (3-letter codes) based on codon chart colors
+# CSS Class Suggestions for future use:
+# .aa-basic { color: #00B7EB; }
+# .aa-amidic { color: #003f88; }
+# .aa-acidic { color: #FF6F00; }
+# .aa-sulfur { color: #FFD700; }
 amino_acid_properties <- list(
-  "ALA" = list(category = "Aliphatic", color = "#FF0000"), # Alanine - Red
-  "GLY" = list(category = "Aliphatic", color = "#FF0000"), # Glycine - Red
-  "ILE" = list(category = "Aliphatic", color = "#FF0000"), # Isoleucine - Red
-  "LEU" = list(category = "Aliphatic", color = "#FF0000"), # Leucine - Red
-  "PRO" = list(category = "Aliphatic", color = "#FF0000"), # Proline - Red
-  "VAL" = list(category = "Aliphatic", color = "#FF0000"), # Valine - Red
-  "PHE" = list(category = "Aromatic", color = "#228B22"),  # Phenylalanine - Green
-  "TRP" = list(category = "Aromatic", color = "#228B22"),  # Tryptophan - Green
-  "TYR" = list(category = "Aromatic", color = "#228B22"),  # Tyrosine - Green
-  "ASP" = list(category = "Acidic", color = "#0000FF"),    # Aspartic Acid - Blue
-  "GLU" = list(category = "Acidic", color = "#0000FF"),    # Glutamic Acid - Blue
-  "ARG" = list(category = "Basic", color = "#4682B4"),     # Arginine - Steel Blue
-  "HIS" = list(category = "Basic", color = "#4682B4"),     # Histidine - Steel Blue
-  "LYS" = list(category = "Basic", color = "#4682B4"),     # Lysine - Steel Blue
-  "SER" = list(category = "Hydroxylic", color = "#FF69B4"),# Serine - Hot Pink
-  "THR" = list(category = "Hydroxylic", color = "#FF69B4"),# Threonine - Hot Pink
-  "CYS" = list(category = "Sulfur-containing", color = "#FFA500"), # Cysteine - Orange
-  "MET" = list(category = "Sulfur-containing", color = "#FFA500"), # Methionine - Orange
-  "ASN" = list(category = "Amidic", color = "#800080"),    # Asparagine - Purple
-  "GLN" = list(category = "Amidic", color = "#800080"),    # Glutamine - Purple
-  "STOP" = list(category = "Stop Codon", color = "#696969")# Stop Codon - Dim Gray
+  # Aliphatic (Red)
+  "ALA" = list(category = "Aliphatic", color = "#FF0000"),
+  "GLY" = list(category = "Aliphatic", color = "#FF0000"),
+  "ILE" = list(category = "Aliphatic", color = "#FF0000"),
+  "LEU" = list(category = "Aliphatic", color = "#FF0000"),
+  "PRO" = list(category = "Aliphatic", color = "#FF0000"),
+  "VAL" = list(category = "Aliphatic", color = "#FF0000"),
+
+  # Aromatic (Green)
+  "PHE" = list(category = "Aromatic", color = "#99CC66"),
+  "TRP" = list(category = "Aromatic", color = "#99CC66"),
+  "TYR" = list(category = "Aromatic", color = "#99CC66"),
+
+  # Acidic (Deep Orange)
+  "ASP" = list(category = "Acidic", color = "#FF6F00"),
+  "GLU" = list(category = "Acidic", color = "#FF6F00"),
+
+  # Basic (Punchy Cyan Blue)
+  "ARG" = list(category = "Basic", color = "#00B7EB"),
+  "HIS" = list(category = "Basic", color = "#00B7EB"),
+  "LYS" = list(category = "Basic", color = "#00B7EB"),
+
+  # Hydroxylic (Pink)
+  "SER" = list(category = "Hydroxylic", color = "#FFB6D5"),
+  "THR" = list(category = "Hydroxylic", color = "#FFB6D5"),
+
+  # Sulfur-containing (Vivid Yellow/Gold)
+  "CYS" = list(category = "Sulfur-containing", color = "#FFD700"),
+  "MET" = list(category = "Sulfur-containing", color = "#FFD700"),
+
+  # Amidic (Dark Blue)
+  "ASN" = list(category = "Amidic", color = "#003f88"),
+  "GLN" = list(category = "Amidic", color = "#003f88"),
+
+  # Special case for STOP codon
+  "STOP" = list(category = "Stop Codon", color = "#696969")
 )
 
 # Function to format amino acid sequence with colors based on properties
@@ -453,31 +473,41 @@ ui <- fluidPage(
   div(class = "intro-text",
       "Welcome, students! 🎓 Observe the generated DNA and RNA sequences. Your task is to enter the correct amino acid sequence by translating the RNA. Let's explore the Central Dogma! 🧬"
   ),
-  div(class = "input-section",
-      # Codon Chart moved to the top
-      h4("Codon Chart", style = "text-align: center; color: #2c3e50; margin-bottom: 15px;"),
-      img(src = "codon_chart.png", style="width: 100%; max-width: 700px; display: block; margin: auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"),
-      p("Codon chart designed by Dr. Sayumi York & Dr. John Finnerty.", style = "text-align: center; color: #666; font-size: 14px; margin-top: 15px;"),
-      p("App coded by Sakib Hussen.", style = "text-align: center; color: #666; font-size: 14px; margin-top: 5px;"),
-      hr(style="margin-top: 25px; margin-bottom: 25px; border-color: #eee;"),
-      
-      div(class = "input-field",
-          tags$label("DNA Template Sequence:"),
-          textInput("dna_display", NULL, value = "TACACCGAAGGCTAA")
-      ),
-      div(class = "input-field",
-          tags$label("RNA Sequence:"),
-          textInput("rna_display", NULL, value = "AUGUGGCUUCCGAUU")
-      ),
-      div(class = "input-field",
-          tags$label("Enter Amino Acid Sequence (3-letter codes, no spaces):"),
-          textInput("amino_acid_input", NULL, value = "", placeholder = "e.g., METTRPLEUPROASPSTOP")
-      ),
-      div(class = "button-section",
-          actionButton("process_sequences", "Check Translation", class = "btn-action btn-process"),
-          actionButton("refresh", "Refresh All", class = "btn-action btn-refresh")
+  # Side-by-side layout for input fields (left) and codon chart (right)
+  fluidRow(
+    # Left column: Input fields and buttons
+    column(6, style = "padding-right: 30px; min-width: 320px; max-width: 600px;",
+      div(class = "input-section",
+        div(class = "input-field",
+            tags$label("DNA Template Sequence:"),
+            textInput("dna_display", NULL, value = "TACACCGAAGGCTAA")
+        ),
+        div(class = "input-field",
+            tags$label("RNA Sequence:"),
+            textInput("rna_display", NULL, value = "AUGUGGCUUCCGAUU")
+        ),
+        div(class = "input-field",
+            tags$label("Enter Amino Acid Sequence (3-letter codes, no spaces):"),
+            textInput("amino_acid_input", NULL, value = "", placeholder = "e.g., METTRPLEUPROASPSTOP")
+        ),
+        div(class = "button-section",
+            actionButton("process_sequences", "Check Translation", class = "btn-action btn-process"),
+            actionButton("refresh", "Refresh All", class = "btn-action btn-refresh")
+        )
       )
+    ),
+    # Right column: Codon chart and credits
+    column(6, style = "padding-left: 30px; min-width: 320px; max-width: 500px;",
+      # --- Codon Chart Section ---
+      div(class = "chart-section",
+        h4("Codon Chart", style = "text-align: center; color: #2c3e50; margin-bottom: 15px;"),
+        img(src = "codon_chart.png", style="width: 100%; max-width: 400px; display: block; margin: auto; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"),
+        p("Codon chart designed by Dr. Sayumi York & Dr. John Finnerty.", style = "text-align: center; color: #666; font-size: 14px; margin-top: 15px;"),
+        p("App coded by Sakib Hussen.", style = "text-align: center; color: #666; font-size: 14px; margin-top: 5px;")
+      )
+    )
   ),
+  # Results section below
   div(class = "results-section",
       h4("Results", style = "color: #2c3e50; text-align: center;"),
       uiOutput("sequence_results"),
